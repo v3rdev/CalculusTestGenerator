@@ -6,7 +6,7 @@ cur = conn.cursor()
 
 cur.execute('''CREATE TABLE IF NOT EXISTS alunos (nome TEXT, nota INTEGER)''')
 
-dados_alunos = [('Carlos', 8), ('João', 9)]
+dados_alunos = [('Carlogit push s', 8)]
 
 cur.executemany('INSERT INTO alunos (nome, nota) VALUES (?, ?)', dados_alunos)
 

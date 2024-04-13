@@ -1,105 +1,115 @@
 import sqlite3
 
-def criarBancoDados():
-    # Conectar-se ao banco de dados
-    NomeBancoDados = input('Digite o nome do banco de dados que deseja criar: ')
-    conn = sqlite3.connect(NomeBancoDados + '.db')
-    cur = conn.cursor()
 
-    while True:
-        opcao = input('Deseja criar uma tabela [Sim/Não]? ').strip().upper()
-        if opcao == 'NÃO':
-            break
-        elif opcao == 'SIM':
-            # Criar a tabela se ela não existir com um nome escolhido
-            NomeTabela = input('Digite o nome da tabela: ')
-            cur.execute(f'''CREATE TABLE IF NOT EXISTS {NomeTabela} (enunciado TEXT, idTopico TEXT)''')
-            print(f'Tabela "{NomeTabela}" criada com sucesso!')
-        else:
-            print('Opção inválida. Por favor, responda com "Sim" ou "Não".')
-
-    # Cometer as alterações e fechar a conexão
-    conn.commit()
-    conn.close()
-    pass
-
-def criarBancoDados(retornarNome = False):
-    # Conectar-se ao banco de dados
-    NomeBancoDados = input('Digite o nome do banco de dados que deseja criar: ')
-    conn = sqlite3.connect(NomeBancoDados + '.db')
-    cur = conn.cursor()
-
-    # Fechar a conexão
-    conn.close()
-
-    print(f'Banco de dados "{NomeBancoDados}" criado com sucesso.')
-
-    if retornarNome == True:
-        return NomeBancoDados
-    pass
-
-
-def criarBancoDados(retornarNome=False):
+def verificarBancoDados(NomeBancoDados):
     import os
-    # Conectar-se ao banco de dados
-    NomeBancoDados = input('Digite o nome do banco de dados que deseja criar: ')
     NomeArquivo = NomeBancoDados + '.db'
+    # Verificar se o arquivo do banco de dados já existe
+    return os.path.exists(NomeArquivo)
+
+
+def criarBancoDados(NomeBancoDados='SemNome', retornarNome=False):
+    if NomeBancoDados == 'SemNome':
+        NomeBancoDados = input('Digite o nome do banco de dados que deseja criar: ')
     
     # Verificar se o arquivo do banco de dados já existe
-    if os.path.exists(NomeArquivo):
+    if verificarBancoDados(NomeBancoDados):
         print(f'O banco de dados "{NomeBancoDados}" já existe.')
         if retornarNome:
             return NomeBancoDados
-        else:
-            return
-    
-    conn = sqlite3.connect(NomeArquivo)
+
+    # Conectar-se ao banco de dados
+    conn = sqlite3.connect(NomeBancoDados + '.db')
     conn.close()
 
     print(f'Banco de dados "{NomeBancoDados}" criado com sucesso.')
 
-    if retornarNome:
+    if retornarNome:   
         return NomeBancoDados
     
 
-def criarTabela():
-    while True:
-        opcao = input('Deseja criar a tabela em um banco de dados existente [Sim/Não/Sair]? ').strip().upper()
-        if opcao == 'SIM' or opcao == 'NÃO' or 'SAIR':
-            break
-        else:
-            print('Opção inválida, tente de novo!')
+def imprimirNomesBancoDados():
+    import os
+    print("Bancos de dados existentes:")
+    # Listar todos os arquivos no diretório atual
+    arquivos = os.listdir('.')
+    # Filtrar os arquivos que terminam com a extensão '.db'
+    bancos_dados = [arquivo[:-3] for arquivo in arquivos if arquivo.endswith('.db')]
+    # Imprimir os nomes dos bancos de dados
+    for banco_dados in bancos_dados:
+        print(banco_dados)
 
-    if opcao == 'SIM' or opcao == 'NÃO':
-        # Conectar-se ao banco de dados correto
-        if opcao == 'SIM':
-            NomeBancoDados = input('Digite o nome do banco de dados onde deseja criar a tabela: ')
-        else:
-            NomeBancoDados = criarBancoDados(True)
-        conn = sqlite3.connect(NomeBancoDados + '.db')
-        cur = conn.cursor()
 
-        # Solicitar o nome da tabela ao usuário
+def criarTabela(NomeBancoDados, NomeTabela='SemNome', retornarNome=False):
+    if NomeTabela == 'SemNome':
+        # Caso o nome da tabela não seja dado, solicitar o nome ao usuário
         NomeTabela = input('Digite o nome da tabela que deseja criar: ')
 
-        # Verificar se a tabela já existe
-        cur.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{NomeTabela}'")
-        tabela_existente = cur.fetchone()
+    conn = sqlite3.connect(NomeBancoDados + '.db')
+    cur = conn.cursor()
 
-        # Criar a tabela se ela não existir
-        if tabela_existente:
-            print(f'A tabela "{NomeTabela}" já existe.')
-        else:
-            cur.execute(f'''CREATE TABLE {NomeTabela} (enunciado TEXT, idTopico TEXT)''')
-            print(f'Tabela "{NomeTabela}" criada com sucesso!')
+    # Verificar se a tabela já existe
+    cur.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{NomeTabela}'")
+    tabela_existente = cur.fetchone()
 
-        # Fechar a conexão
+    # Criar a tabela se ela não existir
+    if tabela_existente:
+        print(f'A tabela "{NomeTabela}" já existe.')
+        if retornarNome:
+            return NomeTabela
+    else:
+        cur.execute(f'''CREATE TABLE {NomeTabela} (enunciado TEXT, idTopico TEXT)''')
+        print(f'Tabela "{NomeTabela}" criada com sucesso!')
+        # Cometer as alterações e fechar a conexão
+        conn.commit()
         conn.close()
+        if retornarNome:
+            return NomeTabela
+        
+
+def imprimirNomesTabelas(NomeBancoDados = 'SemNome'):
+    if NomeBancoDados ==  'SemNome':
+        NomeBancoDados = input('Digite o nome do bando de dados: ')
+    elif not verificarBancoDados(NomeBancoDados):
+        return print(f'O banco de dados com nome {NomeBancoDados} não existe, programa finalizado!')
+        
+    # Conectar ao banco de dados
+    conn = sqlite3.connect(NomeBancoDados + '.db')
+    cursor = conn.cursor()
+
+    # Executar a consulta SQL para recuperar os nomes das tabelas
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+
+    # Recuperar os nomes das tabelas do cursor
+    NomesTabelas = cursor.fetchall()
+
+    if len(NomesTabelas) == 0:
+        print('A tabela está vazia!')
+        #print(NomesTabelas)
+    else:
+        # Imprimir os nomes das tabelas
+        print("Nomes das tabelas:")
+        for tabela in NomesTabelas:
+            print(tabela[0])
+
+    # Fechar a conexão com o banco de dados
+    conn.close()
 
 
-def inserirDados():
-    NomeBancoDados = input('Digite o nome da Base de dados: ')
-    NomeTabela = input('Digite o nome da Tabela:')
+"""def inserirDados():
+    while True:
+        NomeBancoDados = input('Digite o nome da Base de dados: ')
+        if verificarBancoDados(NomeBancoDados):
+            NomeTabela = input('Digite o nome da Tabela:')
+            break
+        else:
+            opcao = input('O bando de dados ainda não existe, deseja criar um com esse nome [Sim/Não]? ').strip().upper()
+            if opcao == 'SIM':
+                NomeBancoDados = criarBancoDados(NomeBancoDados, True)
+            elif opcao == 'NÃO':
+                return print('Função finalizada!')
+            else:
+                return print('Opção inválida, função finalizada!')
 
     # Conectar-se ao banco de dados correto
     conn = sqlite3.connect(NomeBancoDados + '.db')
@@ -107,13 +117,55 @@ def inserirDados():
 
     # Coletar enunciado e tópico da questão
     inicio = r'''
-    \documentclass{article}
-    \begin{document}
+    documentclass{article}
+    begin{document}
     '''
     final = r'''
-    \end{document}
+    end{document}
     '''
     enunciado = input('Quesão: ')
+    idTopico = input('Informe o tópico da questão: ')
+
+    # Inserir dados na tabela
+    cur.execute(f'INSERT INTO {NomeTabela} (enunciado, idTopico) VALUES (?, ?)', [(enunciado, idTopico)])
+
+    # Cometer as alterações e fechar a conexão
+    conn.commit()
+    conn.close()
+
+    print('Dados inseridos com sucesso.')
+    pass"""
+
+
+def inserirDados():
+    while True:
+        NomeBancoDados = input('Digite o nome da Base de dados: ')
+        if verificarBancoDados(NomeBancoDados):
+            NomeTabela = input('Digite o nome da Tabela:')
+            break
+        else:
+            opcao = input('O banco de dados ainda não existe, deseja criar um com esse nome [Sim/Não]? ').strip().upper()
+            if opcao == 'SIM':
+                NomeBancoDados = criarBancoDados(NomeBancoDados, True)
+            elif opcao == 'NÃO':
+                return print('Função finalizada!')
+            else:
+                return print('Opção inválida, função finalizada!')
+
+    # Conectar-se ao banco de dados correto
+    conn = sqlite3.connect(NomeBancoDados + '.db')
+    cur = conn.cursor()
+
+#    # Coletar enunciado e tópico da questão
+#    inicio = r'''
+#    \documentclass{article}
+#    \begin{document}
+#    '''
+#    final = r'''
+#    \end{document}
+#    '''
+
+    enunciado = input('Questão: ')
     idTopico = input('Informe o tópico da questão: ')
 
     # Inserir dados na tabela
@@ -126,13 +178,36 @@ def inserirDados():
     print('Dados inseridos com sucesso.')
 
 
-def imprimirDados():
-    NomeBancoDados = input('Digite o nome da Base de dados: ')
-    NomeTabela = input('Digite o nome da Tabela:')
+def imprimirDados(NomeBancoDados='SemNome', NomeTabela='SemNome'):
+    if NomeBancoDados == 'SemNome' and NomeTabela == 'SemNome':
+        NomeBancoDados = input('Digite o nome da Base de dados: ')
+        if verificarBancoDados(NomeBancoDados):
+            conn = sqlite3.connect(NomeBancoDados + '.db')
+            cur = conn.cursor()
     
+            # Solicitar o nome da tabela ao usuário
+            NomeTabela = input('Digite o nome da tabela: ')
+
+            # Verificar se a tabela já existe
+            cur.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{NomeTabela}'")
+            tabela_existente = cur.fetchone()
+
+            # Criar a tabela se ela não existir
+            if not tabela_existente:
+                return print(f'A tabela com nome {NomeTabela} não existe, programa finalizado!')
+        else:
+            return print(f'O banco de dados com nome {NomeBancoDados} não existe, programa finalizado!')
+
     # Conectar-se ao banco de dados
     conn = sqlite3.connect(NomeBancoDados + '.db')
     cur = conn.cursor()
+
+    # Verificar se a tabela já existe
+    cur.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{NomeTabela}'")
+    tabela_existente = cur.fetchone()
+
+    if not tabela_existente:
+        return print(f'A tabela de {NomeTabela} não existe, programa finalizado!')
 
     # Selecionar todos os dados da tabela
     cur.execute('SELECT * FROM ' + NomeTabela)
@@ -145,31 +220,43 @@ def imprimirDados():
     conn.close()
 
 
-def imprimirNomesTabelas(NomeBancoDados):
-    # Conectar ao banco de dados
-    conn = sqlite3.connect(NomeBancoDados)
-    cursor = conn.cursor()
 
-    # Executar a consulta SQL para recuperar os nomes das tabelas
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
 
-    # Recuperar os nomes das tabelas do cursor
-    NomesTabelas = cursor.fetchall()
 
-    # Imprimir os nomes das tabelas
-    print("Nomes das tabelas:")
-    for tabela in NomesTabelas:
-        print(tabela[0])
 
-    # Fechar a conexão com o banco de dados
-    conn.close()
+
+
+# Programa Principal
+
+"""nomeBanco = input('Digite o nome do banco de dados que deseja criar: ')
+criarBancoDados(nomeBanco)
+imprimirNomesBancoDados()
+
+nomeTabela = input('Digite o nome da tabela que deseja criar: ')
+criarTabela(nomeBanco, nomeTabela)
+imprimirNomesTabelas(nomeBanco)
+#Calculo2 = criarTabela(BancoVer2, 'Calculo2')
+"""
+#inserirDados()
+imprimirDados('MMB1_2005', 'Notas_P2')
+
+#criarTabela('BancoVer2')
+
+
+#imprimirNomesTabelas()
+
+
+
+
+
+
 
 
 
 #criarBancoDados('BancoTeste3')
 #inserirDados('BancoTeste3')
 #imprimirDados('BancoTeste3')
-imprimirNomesTabelas('BancoTeste3')
+#imprimirNomesTabelas('BancoTeste3')
 
 
 class Question:

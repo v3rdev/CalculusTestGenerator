@@ -2,6 +2,15 @@ import sqlite3
 
 
 def verificarBancoDados(NomeBancoDados):
+    """
+    Verifica se um banco de dados SQLite com o nome especificado já existe no sistema de arquivos.
+
+    Args:
+        NomeBancoDados (str): O nome do banco de dados a ser verificado.
+
+    Returns:
+        bool: True se o arquivo do banco de dados existe, False caso contrário.
+    """
     import os
     NomeArquivo = NomeBancoDados + '.db'
     # Verificar se o arquivo do banco de dados já existe
@@ -9,6 +18,16 @@ def verificarBancoDados(NomeBancoDados):
 
 
 def criarBancoDados(NomeBancoDados='SemNome', retornarNome=False):
+    """
+    Cria um novo banco de dados SQLite com o nome especificado, se ele ainda não existir.
+
+    Args:
+        NomeBancoDados (str, opcional): O nome do banco de dados a ser criado. Se não fornecido, será solicitado ao usuário.
+        retornarNome (bool, opcional): Se True, a função retorna o nome do banco de dados criado. Caso contrário, apenas imprime uma mensagem.
+
+    Returns:
+        str: O nome do banco de dados criado, se retornarNome for True.
+    """
     if NomeBancoDados == 'SemNome':
         NomeBancoDados = input('Digite o nome do banco de dados que deseja criar: ')
     
@@ -32,6 +51,13 @@ def criarBancoDados(NomeBancoDados='SemNome', retornarNome=False):
            
 
 def imprimirNomesBancoDados():
+    """
+    Imprime os nomes dos bancos de dados existentes no diretório atual.
+
+    A função lista todos os arquivos no diretório atual com a extensão '.db'
+    e imprime seus nomes sem a extensão.
+
+    """
     import os
     print("Bancos de dados existentes:")
     # Listar todos os arquivos no diretório atual
@@ -44,16 +70,39 @@ def imprimirNomesBancoDados():
 
 
 def verificarTabela(NomeBancoDados, NomeTabela):
+    """
+    Verifica se uma tabela específica existe em um banco de dados SQLite.
+
+    Args:
+        NomeBancoDados (str): O nome do banco de dados SQLite, sem a extensão .db.
+        NomeTabela (str): O nome da tabela a ser verificada.
+
+    Returns:
+        bool: True se a tabela existir, False caso contrário.
+    """
     if verificarBancoDados(NomeBancoDados):
         conn = sqlite3.connect(NomeBancoDados + '.db')
         cur = conn.cursor()
         cur.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{NomeTabela}'")
-        return cur.fetchone()
+        tabela_existente = cur.fetchone()
+        conn.close()
+        return tabela_existente is not None
     else:
         return False
 
 
 def criarTabela(NomeBancoDados, NomeTabela='SemNome', retornarNome=False):
+    """
+    Cria uma tabela em um banco de dados SQLite.
+
+    Args:
+        NomeBancoDados (str): O nome do banco de dados SQLite, sem a extensão .db.
+        NomeTabela (str, optional): O nome da tabela a ser criada. Se não fornecido, será solicitado ao usuário.
+        retornarNome (bool, optional): Indica se o nome da tabela deve ser retornado. O padrão é False.
+
+    Returns:
+        str or None: O nome da tabela criada, se retornarNome for True, caso contrário, None.
+    """
     if not verificarBancoDados(NomeBancoDados):
         return print(f'O banco de dados com nome {NomeBancoDados} não existe, programa finalizado!')
     if NomeTabela == 'SemNome':
@@ -81,6 +130,15 @@ def criarTabela(NomeBancoDados, NomeTabela='SemNome', retornarNome=False):
         
 
 def imprimirNomesTabelas(NomeBancoDados = 'SemNome'):
+    """
+    Imprime os nomes das tabelas em um banco de dados SQLite.
+
+    Parameters:
+    - NomeBancoDados (str): O nome do banco de dados SQLite. Se não for fornecido, será solicitado ao usuário.
+
+    Returns:
+    - None
+    """
     if NomeBancoDados ==  'SemNome':
         NomeBancoDados = input('Digite o nome do bando de dados: ')
     if not verificarBancoDados(NomeBancoDados):
@@ -110,6 +168,18 @@ def imprimirNomesTabelas(NomeBancoDados = 'SemNome'):
 
 
 def inserirDados(NomeBancoDados = 'SemNome', NomeTabela = 'SemNome'):
+    """
+    Insere dados em uma tabela de um banco de dados SQLite.
+
+    Args:
+        NomeBancoDados (str, optional): O nome do banco de dados onde os dados serão inseridos. Se não fornecido,
+        o usuário será solicitado a inserir o nome do banco de dados. O padrão é 'SemNome'.
+        NomeTabela (str, optional): O nome da tabela onde os dados serão inseridos. Se não fornecido, o usuário será
+        solicitado a inserir o nome da tabela. O padrão é 'SemNome'.
+
+    Returns:
+        None
+    """
     if NomeBancoDados == 'SemNome':
         NomeBancoDados = input('Digite o nome da base de dados: ')
     if not verificarBancoDados(NomeBancoDados):
@@ -145,6 +215,18 @@ def inserirDados(NomeBancoDados = 'SemNome', NomeTabela = 'SemNome'):
 
 
 def imprimirDados(NomeBancoDados='SemNome', NomeTabela='SemNome'):
+    """
+    Imprime todos os dados de uma tabela de um banco de dados SQLite.
+
+    Args:
+        NomeBancoDados (str, optional): O nome do banco de dados onde os dados serão impressos. Se não fornecido,
+        o usuário será solicitado a inserir o nome do banco de dados. O padrão é 'SemNome'.
+        NomeTabela (str, optional): O nome da tabela onde os dados serão impressos. Se não fornecido, o usuário será
+        solicitado a inserir o nome da tabela. O padrão é 'SemNome'.
+
+    Returns:
+        None
+    """
     if NomeBancoDados == 'SemNome':
         NomeBancoDados = input('Digite o nome da base de dados: ')
     if not verificarBancoDados(NomeBancoDados):

@@ -14,9 +14,10 @@ def criarBancoDados(NomeBancoDados='SemNome', retornarNome=False):
     
     # Verificar se o arquivo do banco de dados já existe
     if verificarBancoDados(NomeBancoDados):
-        print(f'O banco de dados "{NomeBancoDados}" já existe.')
         if retornarNome:
             return NomeBancoDados
+        else:
+            return print(f'O banco de dados "{NomeBancoDados}" já existe.')
 
     # Conectar-se ao banco de dados
     conn = sqlite3.connect(NomeBancoDados + '.db')
@@ -26,7 +27,9 @@ def criarBancoDados(NomeBancoDados='SemNome', retornarNome=False):
 
     if retornarNome:   
         return NomeBancoDados
-    
+    else:
+        return print(f'O banco de dados "{NomeBancoDados}" já existe.')
+           
 
 def imprimirNomesBancoDados():
     import os
@@ -40,7 +43,19 @@ def imprimirNomesBancoDados():
         print(banco_dados)
 
 
+def verificarTabela(NomeBancoDados, NomeTabela):
+    if verificarBancoDados(NomeBancoDados):
+        conn = sqlite3.connect(NomeBancoDados + '.db')
+        cur = conn.cursor()
+        cur.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{NomeTabela}'")
+        return cur.fetchone()
+    else:
+        return False
+
+
 def criarTabela(NomeBancoDados, NomeTabela='SemNome', retornarNome=False):
+    if not verificarBancoDados(NomeBancoDados):
+        return print(f'O banco de dados com nome {NomeBancoDados} não existe, programa finalizado!')
     if NomeTabela == 'SemNome':
         # Caso o nome da tabela não seja dado, solicitar o nome ao usuário
         NomeTabela = input('Digite o nome da tabela que deseja criar: ')
@@ -48,29 +63,27 @@ def criarTabela(NomeBancoDados, NomeTabela='SemNome', retornarNome=False):
     conn = sqlite3.connect(NomeBancoDados + '.db')
     cur = conn.cursor()
 
-    # Verificar se a tabela já existe
-    cur.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{NomeTabela}'")
-    tabela_existente = cur.fetchone()
-
     # Criar a tabela se ela não existir
-    if tabela_existente:
-        print(f'A tabela "{NomeTabela}" já existe.')
+    if verificarTabela(NomeTabela):
         if retornarNome:
             return NomeTabela
+        else:
+            return print(f'A tabela "{NomeTabela}" já existe.')
     else:
         cur.execute(f'''CREATE TABLE {NomeTabela} (enunciado TEXT, idTopico TEXT)''')
-        print(f'Tabela "{NomeTabela}" criada com sucesso!')
         # Cometer as alterações e fechar a conexão
         conn.commit()
         conn.close()
         if retornarNome:
             return NomeTabela
+        else:
+            return print(f'Tabela "{NomeTabela}" criada com sucesso!')
         
 
 def imprimirNomesTabelas(NomeBancoDados = 'SemNome'):
     if NomeBancoDados ==  'SemNome':
         NomeBancoDados = input('Digite o nome do bando de dados: ')
-    elif not verificarBancoDados(NomeBancoDados):
+    if not verificarBancoDados(NomeBancoDados):
         return print(f'O banco de dados com nome {NomeBancoDados} não existe, programa finalizado!')
         
     # Conectar ao banco de dados
@@ -96,63 +109,16 @@ def imprimirNomesTabelas(NomeBancoDados = 'SemNome'):
     conn.close()
 
 
-"""def inserirDados():
-    while True:
-        NomeBancoDados = input('Digite o nome da Base de dados: ')
-        if verificarBancoDados(NomeBancoDados):
-            NomeTabela = input('Digite o nome da Tabela:')
-            break
-        else:
-            opcao = input('O bando de dados ainda não existe, deseja criar um com esse nome [Sim/Não]? ').strip().upper()
-            if opcao == 'SIM':
-                NomeBancoDados = criarBancoDados(NomeBancoDados, True)
-            elif opcao == 'NÃO':
-                return print('Função finalizada!')
-            else:
-                return print('Opção inválida, função finalizada!')
+def inserirDados(NomeBancoDados = 'SemNome', NomeTabela = 'SemNome'):
+    if NomeBancoDados == 'SemNome':
+        NomeBancoDados = input('Digite o nome da base de dados: ')
+    if not verificarBancoDados(NomeBancoDados):
+        return print(f'O banco de dados com nome {NomeBancoDados} não existe, programa finalizado!')
+    if NomeTabela == 'SemNome':
+        NomeTabela = input('Digite o nome da tabela: ')
+    if not verificarTabela(NomeBancoDados, NomeTabela):
+        return print(f'A tabela com nome {NomeTabela} não existe, programa finalizado!')
 
-    # Conectar-se ao banco de dados correto
-    conn = sqlite3.connect(NomeBancoDados + '.db')
-    cur = conn.cursor()
-
-    # Coletar enunciado e tópico da questão
-    inicio = r'''
-    documentclass{article}
-    begin{document}
-    '''
-    final = r'''
-    end{document}
-    '''
-    enunciado = input('Quesão: ')
-    idTopico = input('Informe o tópico da questão: ')
-
-    # Inserir dados na tabela
-    cur.execute(f'INSERT INTO {NomeTabela} (enunciado, idTopico) VALUES (?, ?)', [(enunciado, idTopico)])
-
-    # Cometer as alterações e fechar a conexão
-    conn.commit()
-    conn.close()
-
-    print('Dados inseridos com sucesso.')
-    pass"""
-
-
-def inserirDados():
-    while True:
-        NomeBancoDados = input('Digite o nome da Base de dados: ')
-        if verificarBancoDados(NomeBancoDados):
-            NomeTabela = input('Digite o nome da Tabela:')
-            break
-        else:
-            opcao = input('O banco de dados ainda não existe, deseja criar um com esse nome [Sim/Não]? ').strip().upper()
-            if opcao == 'SIM':
-                NomeBancoDados = criarBancoDados(NomeBancoDados, True)
-            elif opcao == 'NÃO':
-                return print('Função finalizada!')
-            else:
-                return print('Opção inválida, função finalizada!')
-
-    # Conectar-se ao banco de dados correto
     conn = sqlite3.connect(NomeBancoDados + '.db')
     cur = conn.cursor()
 
@@ -179,35 +145,18 @@ def inserirDados():
 
 
 def imprimirDados(NomeBancoDados='SemNome', NomeTabela='SemNome'):
-    if NomeBancoDados == 'SemNome' and NomeTabela == 'SemNome':
-        NomeBancoDados = input('Digite o nome da Base de dados: ')
-        if verificarBancoDados(NomeBancoDados):
-            conn = sqlite3.connect(NomeBancoDados + '.db')
-            cur = conn.cursor()
-    
-            # Solicitar o nome da tabela ao usuário
-            NomeTabela = input('Digite o nome da tabela: ')
-
-            # Verificar se a tabela já existe
-            cur.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{NomeTabela}'")
-            tabela_existente = cur.fetchone()
-
-            # Criar a tabela se ela não existir
-            if not tabela_existente:
-                return print(f'A tabela com nome {NomeTabela} não existe, programa finalizado!')
-        else:
-            return print(f'O banco de dados com nome {NomeBancoDados} não existe, programa finalizado!')
+    if NomeBancoDados == 'SemNome':
+        NomeBancoDados = input('Digite o nome da base de dados: ')
+    if not verificarBancoDados(NomeBancoDados):
+        return print(f'O banco de dados com nome {NomeBancoDados} não existe, programa finalizado!')
+    if NomeTabela == 'SemNome':
+        NomeTabela = input('Digite o nome da tabela: ')
+    if not verificarTabela(NomeBancoDados, NomeTabela):
+        return print(f'A tabela com nome {NomeTabela} não existe, programa finalizado!')
 
     # Conectar-se ao banco de dados
     conn = sqlite3.connect(NomeBancoDados + '.db')
     cur = conn.cursor()
-
-    # Verificar se a tabela já existe
-    cur.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{NomeTabela}'")
-    tabela_existente = cur.fetchone()
-
-    if not tabela_existente:
-        return print(f'A tabela de {NomeTabela} não existe, programa finalizado!')
 
     # Selecionar todos os dados da tabela
     cur.execute('SELECT * FROM ' + NomeTabela)
@@ -237,14 +186,17 @@ criarTabela(nomeBanco, nomeTabela)
 imprimirNomesTabelas(nomeBanco)
 #Calculo2 = criarTabela(BancoVer2, 'Calculo2')
 """
-#inserirDados()
-imprimirDados('MMB1_2005', 'Notas_P2')
 
-#criarTabela('BancoVer2')
+
+#imprimirNomesBancoDados()
+#inserirDados('MMB1_2005', 'Notas_P2')
+imprimirDados('MMB1_2005', 'Notas_P2')
+#imprimirDados()
+
+#criarTabela('')
 
 
 #imprimirNomesTabelas()
-
 
 
 

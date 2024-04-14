@@ -104,6 +104,7 @@ def editarListaNomesBancoDados():
         print(f'O arquivo "{NomeBancoDados}" não existe.')
 
 
+
 def verificarTabela(NomeBancoDados, NomeTabela):
     """
     Verifica se uma tabela específica existe em um banco de dados SQLite.
@@ -154,7 +155,7 @@ def criarTabela(NomeBancoDados, NomeTabela='SemNome', retornarNome=False):
         else:
             return print(f'A tabela "{NomeTabela}" já existe.')
     else:
-        cur.execute(f'''CREATE TABLE {NomeTabela} (enunciado TEXT, idTopico TEXT)''')
+        cur.execute(f'''CREATE TABLE {NomeTabela} (IdQuestao TEXT, enunciado TEXT, IdTopico TEXT, Peso FLOAT)''')
         # Cometer as alterações e fechar a conexão
         conn.commit()
         conn.close()
@@ -242,6 +243,7 @@ def editarListaNomesTabelas(NomeBancoDados):
     conn.close()
 
 
+
 def inserirDados(NomeBancoDados = 'SemNome', NomeTabela = 'SemNome'):
     """
     Insere dados em uma tabela de um banco de dados SQLite.
@@ -276,11 +278,13 @@ def inserirDados(NomeBancoDados = 'SemNome', NomeTabela = 'SemNome'):
 #    \end{document}
 #    '''
 
-    enunciado = input('Questão: ')
-    idTopico = input('Informe o tópico da questão: ')
+    IdQuestao = input('IdQuestao: ')
+    Enunciado = input('Questão: ')
+    IdTopico = input('Informe o tópico da questão: ')
+    Peso = float(input('Peso: '))
 
     # Inserir dados na tabela
-    cur.execute(f'INSERT INTO {NomeTabela} (enunciado, idTopico) VALUES (?, ?)', (enunciado, idTopico))
+    cur.execute(f'INSERT INTO {NomeTabela} (IdQuestao, Enunciado, IdTopico, Peso) VALUES (?, ?, ?, ?)', (IdQuestao, Enunciado, IdTopico, Peso))
 
     # Cometer as alterações e fechar a conexão
     conn.commit()
@@ -334,20 +338,20 @@ def editarListaDados(NomeBancoDados, NomeTabela):
     cur = conn.cursor()
     cur.execute("SELECT * FROM " + NomeTabela)
     linhas = cur.fetchall()
-    print(linhas)
-    EntradasIdTopico = [linhas[i][1] for i in range(len(linhas))]
-    print(EntradasIdTopico)
+ #   print(linhas)
+    EntradasIdQuestao = [linhas[i][0] for i in range(len(linhas))]
+ #   print(EntradasIdQuestao)
     while True:
-        IdTopico = input('Digite o ID da questão que deseja remover [ou C para cancelar a edição]: ') # IdQuestao
-        if IdTopico in EntradasIdTopico:
-            cur.execute(f"DELETE FROM {NomeTabela} WHERE idTopico=?", (IdTopico,))
-            print(f'A entrada com ID {IdTopico} foi removido com sucesso.')
+        IdQuestao = input('Digite o ID da questão que deseja remover [ou C para cancelar a edição]: ') # IdQuestao
+        if IdQuestao in EntradasIdQuestao:
+            cur.execute(f"DELETE FROM {NomeTabela} WHERE IdQuestao=?", (IdQuestao,))
+            print(f'A entrada com ID {IdQuestao} foi removido com sucesso.')
             break
-        elif IdTopico.strip().upper() == 'C':
+        elif IdQuestao.strip().upper() == 'C':
             print('Edição cancelada!')
             break
         else:
-            print('Não existe uma entrada com esse IdTopico, tente de novo!')
+            print('Não existe uma entrada com esse IdQuestão, tente de novo!')
     conn.commit()
     conn.close()
 
@@ -380,8 +384,19 @@ imprimirNomesTabelas(nomeBanco)
 
 #imprimirNomesBancoDados()
 
-editarListaDados('MMB1_2005', 'Notas_P2')
-imprimirDados('MMB1_2005', 'Notas_P2')
+
+
+#NomeBancoDados = criarBancoDados('BD_Calculo_1', True)
+#imprimirNomesBancoDados()
+#NomeTabela = criarTabela(NomeBancoDados, 'Tabela_Questoes', True)
+#imprimirNomesTabelas(NomeBancoDados)
+#inserirDados()
+editarListaDados('BD_Calculo_1', 'Tabela_Questoes')
+imprimirDados('BD_Calculo_1', 'Tabela_Questoes')
+
+
+#editarListaDados('MMB1_2005', 'Notas_P2')
+#imprimirDados('MMB1_2005', 'Notas_P2')
 
 
 

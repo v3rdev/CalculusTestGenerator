@@ -64,9 +64,44 @@ def imprimirNomesBancoDados():
     arquivos = os.listdir('.')
     # Filtrar os arquivos que terminam com a extensão '.db'
     bancos_dados = [arquivo[:-3] for arquivo in arquivos if arquivo.endswith('.db')]
+
     # Imprimir os nomes dos bancos de dados
     for banco_dados in bancos_dados:
         print(banco_dados)
+
+
+def editarListaNomesBancoDados():
+    """
+    Permite editar a lista de bancos de dados.
+
+    O usuário pode optar por remover ou renomear um banco de dados existente.
+
+    Returns:
+        None
+    """
+    import os
+    opcao = int(input('''
+                      Editar lista de Banco de Dados
+                      [1] Remover
+                      [2] Renomear
+                      [3] Sair
+                      
+                      Escolha uma opção: '''))
+    if opcao == 3:
+        return print('Programa finalizado!')
+    imprimirNomesBancoDados()
+    operacao = 'remover' if opcao == 1 else 'renomear'
+    NomeBancoDados = input(f'Digite o nome do arquivo que deseja {operacao}: ')
+    if os.path.exists(NomeBancoDados + '.db'):
+        if opcao == 1:
+            os.remove(NomeBancoDados + '.db')
+            print(f'O arquivo "{NomeBancoDados}" foi removido com sucesso.')
+        elif opcao == 2:
+            NomeBancoDadosNovo = input('Digite o novo nome do arquivo que deseja renomear: ')
+            os.rename(NomeBancoDados + '.db', NomeBancoDadosNovo + '.db')
+            print(f'O arquivo foi renomeado com sucesso.')
+    else:
+        print(f'O arquivo "{NomeBancoDados}" não existe.')
 
 
 def verificarTabela(NomeBancoDados, NomeTabela):
@@ -113,7 +148,7 @@ def criarTabela(NomeBancoDados, NomeTabela='SemNome', retornarNome=False):
     cur = conn.cursor()
 
     # Criar a tabela se ela não existir
-    if verificarTabela(NomeTabela):
+    if verificarTabela(NomeBancoDados, NomeTabela):
         if retornarNome:
             return NomeTabela
         else:
@@ -164,6 +199,46 @@ def imprimirNomesTabelas(NomeBancoDados = 'SemNome'):
             print(tabela[0])
 
     # Fechar a conexão com o banco de dados
+    conn.close()
+
+
+def editarListaNomesTabelas(NomeBancoDados):
+    if not verificarBancoDados(NomeBancoDados):
+        return print(f'O banco de dados com nome {NomeBancoDados} não existe!')
+    opcao = int(input('''
+                      Editar lista de tabelas
+                      [1] Remover
+                      [2] Renomear
+                      [3] Sair
+                      
+                      Escolha uma opção: '''))
+    if opcao == 3:
+        return print('Programa finalizado!')
+    imprimirNomesTabelas(NomeBancoDados)
+    operacao = 'remover' if opcao == 1 else 'renomear'
+    NomeTabela = input(f'Digite o nome do arquivo que deseja {operacao}: ')
+    conn = sqlite3.connect(NomeBancoDados + '.db')
+    cur = conn.cursor()
+    if verificarTabela(NomeBancoDados, NomeTabela):
+        if opcao == 1:
+            cur.execute(f"DROP TABLE IF EXISTS {NomeTabela}")
+            print(f'O arquivo foi removido com sucesso.')
+        elif opcao == 2:
+            cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            NomesTabelas = cur.fetchall()
+            NomesTabelas = [NomesTabelas[i][0] for i in range(len(NomesTabelas))]
+            while True:
+                NomeTabelaNovo = input('Digite o novo nome do arquivo que deseja renomear: ')
+                if NomeTabelaNovo in NomesTabelas:
+                    print('Já existe um arquivo com esse nome, tente de novo!')
+                else:
+                    break            
+            cur.execute(f"ALTER TABLE {NomeTabela} RENAME TO {NomeTabelaNovo}")
+            #os.rename(NomeBancoDados + '.db', NomeBancoDadosNovo + '.db')
+            print('O arquivo foi renomeado com sucesso.')
+    else:
+        print(f'O arquivo "{NomeTabela}" não existe.')
+    conn.commit()
     conn.close()
 
 
@@ -251,6 +326,30 @@ def imprimirDados(NomeBancoDados='SemNome', NomeTabela='SemNome'):
     conn.close()
 
 
+def editarListaDados(NomeBancoDados, NomeTabela):
+    if verificarBancoDados(NomeBancoDados) == False or verificarTabela(NomeBancoDados, NomeTabela) == False:
+        print('Verifique se a informação fornecida é válida!')
+    imprimirDados(NomeBancoDados, NomeTabela)
+    conn = sqlite3.connect(NomeBancoDados + '.db')
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM " + NomeTabela)
+    linhas = cur.fetchall()
+    print(linhas)
+    EntradasIdTopico = [linhas[i][1] for i in range(len(linhas))]
+    print(EntradasIdTopico)
+    while True:
+        IdTopico = input('Digite o ID da questão que deseja remover [ou C para cancelar a edição]: ') # IdQuestao
+        if IdTopico in EntradasIdTopico:
+            cur.execute(f"DELETE FROM {NomeTabela} WHERE idTopico=?", (IdTopico,))
+            print(f'A entrada com ID {IdTopico} foi removido com sucesso.')
+            break
+        elif IdTopico.strip().upper() == 'C':
+            print('Edição cancelada!')
+            break
+        else:
+            print('Não existe uma entrada com esse IdTopico, tente de novo!')
+    conn.commit()
+    conn.close()
 
 
 
@@ -272,13 +371,17 @@ imprimirNomesTabelas(nomeBanco)
 
 #imprimirNomesBancoDados()
 #inserirDados('MMB1_2005', 'Notas_P2')
-imprimirDados('MMB1_2005', 'Notas_P2')
+#imprimirDados('MMB1_2005', 'Notas_P2')
 #imprimirDados()
 
-#criarTabela('')
+#criarTabela('MMB1_2005')
 
+#editarListaNomesBancoDados()
 
-#imprimirNomesTabelas()
+#imprimirNomesBancoDados()
+
+editarListaDados('MMB1_2005', 'Notas_P2')
+imprimirDados('MMB1_2005', 'Notas_P2')
 
 
 
